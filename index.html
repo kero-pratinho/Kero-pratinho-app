@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kero Pratinho — Monte seu pratinho</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FBF3E4;
+    --surface:#FFFFFF;
+    --ink:#3A2415;
+    --ink-soft:#6B5A47;
+    --primary:#A63B2B;
+    --primary-dark:#832C1F;
+    --accent:#D9A441;
+    --olive:#5C7A3D;
+    --muted:#D8CBB4;
+    --line:#E4D6BC;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Public Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:96px;
+  }
+  .wrap{max-width:560px;margin:0 auto;padding:0 20px;}
+
+  header{padding:32px 20px 20px;text-align:left;border-bottom:1px solid var(--line);}
+  .brand-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  h1{
+    font-family:'Instrument Serif', serif;
+    font-style:italic;
+    font-weight:400;
+    font-size:42px;
+    line-height:1;
+    margin:0 0 6px;
+    color:var(--primary-dark);
+  }
+  .tagline{font-size:14px;color:var(--ink-soft);margin:0;}
+  .status{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:12px;font-weight:600;
+    padding:5px 10px;border-radius:20px;
+    white-space:nowrap;
+  }
+  .status.open{background:#EAF1E2;color:var(--olive);}
+  .status.closed{background:#F3E3DC;color:var(--primary);}
+  .status .dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+  .hours{font-size:13px;color:var(--ink-soft);margin-top:10px;}
+
+  section{padding:26px 0;border-bottom:1px solid var(--line);}
+  .step-label{
+    display:flex;align-items:center;gap:10px;margin-bottom:14px;
+  }
+  .step-num{
+    font-family:'Instrument Serif', serif;font-style:italic;
+    font-size:22px;color:var(--primary);
+  }
+  .step-title{font-size:16px;font-weight:600;margin:0;}
+  .step-hint{font-size:13px;color:var(--ink-soft);margin:2px 0 0;}
+
+  .size-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .size-card{
+    border:1.5px solid var(--line);border-radius:10px;
+    padding:16px;text-align:center;cursor:pointer;background:var(--surface);
+    transition:border-color .15s, background .15s;
+  }
+  .size-card .letter{font-family:'Instrument Serif',serif;font-size:30px;font-style:italic;display:block;}
+  .size-card .price{font-size:15px;font-weight:600;color:var(--ink-soft);}
+  .size-card.selected{border-color:var(--primary);background:#FBEDE7;}
+  .size-card.selected .price{color:var(--primary-dark);}
+
+  .option-list{display:flex;flex-direction:column;gap:8px;}
+  .option{
+    display:flex;align-items:center;gap:12px;
+    border:1.5px solid var(--line);border-radius:10px;
+    padding:13px 14px;background:var(--surface);cursor:pointer;
+    font-size:14.5px;
+  }
+  .option .check{
+    width:20px;height:20px;flex:0 0 20px;border-radius:6px;
+    border:1.5px solid var(--muted);position:relative;
+  }
+  .option.selected{border-color:var(--olive);background:#F3F7ED;}
+  .option.selected .check{background:var(--olive);border-color:var(--olive);}
+  .option.selected .check::after{
+    content:'';position:absolute;left:6px;top:2px;width:5px;height:10px;
+    border:solid white;border-width:0 2px 2px 0;transform:rotate(45deg);
+  }
+  .option.disabled{opacity:.4;cursor:not-allowed;}
+  .option .day-note{margin-left:auto;font-size:11px;color:var(--accent);font-weight:600;white-space:nowrap;}
+  .empty-note{font-size:13px;color:var(--ink-soft);font-style:italic;}
+
+  textarea{
+    width:100%;border:1.5px solid var(--line);border-radius:10px;
+    padding:12px 14px;font-family:inherit;font-size:14.5px;background:var(--surface);
+    resize:vertical;min-height:52px;
+  }
+  input[type=text],input[type=password]{
+    width:100%;border:1.5px solid var(--line);border-radius:10px;
+    padding:12px 14px;font-family:inherit;font-size:14.5px;background:var(--surface);
+  }
+
+  .summary-bar{
+    position:fixed;bottom:0;left:0;right:0;
+    background:var(--surface);border-top:1px solid var(--line);
+    padding:14px 20px;box-shadow:0 -8px 24px rgba(58,36,21,.06);
+  }
+  .summary-inner{max-width:560px;margin:0 auto;display:flex;align-items:center;gap:14px;}
+  .summary-total{flex:1;}
+  .summary-total .label{font-size:11px;color:var(--ink-soft);text-transform:none;}
+  .summary-total .amount{font-family:'Instrument Serif',serif;font-style:italic;font-size:26px;color:var(--primary-dark);}
+  .send-btn{
+    background:var(--primary);color:white;border:none;border-radius:10px;
+    padding:14px 22px;font-size:15px;font-weight:600;font-family:inherit;
+    cursor:pointer;white-space:nowrap;
+  }
+  .send-btn:disabled{background:var(--muted);cursor:not-allowed;}
+  .send-btn:active:not(:disabled){background:var(--primary-dark);}
+
+  footer{padding:22px 0 8px;text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center;}
+  .admin-link{
+    font-size:12.5px;color:var(--ink-soft);text-decoration:underline;background:none;
+    border:none;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;
+  }
+  .badge{
+    background:var(--primary);color:white;font-size:11px;font-weight:700;
+    border-radius:20px;padding:1px 7px;line-height:1.5;
+  }
+
+  .overlay{
+    position:fixed;inset:0;background:rgba(58,36,21,.45);
+    display:none;align-items:flex-end;justify-content:center;z-index:50;
+  }
+  .overlay.show{display:flex;}
+  .panel{
+    background:var(--bg);width:100%;max-width:560px;max-height:85vh;overflow-y:auto;
+    border-radius:18px 18px 0 0;padding:22px 20px 30px;
+  }
+  .panel h2{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;font-size:26px;margin:0 0 4px;color:var(--primary-dark);}
+  .panel .sub{font-size:13px;color:var(--ink-soft);margin:0 0 18px;}
+  .panel-group h3{font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);margin:18px 0 8px;font-weight:600;}
+  .toggle-row{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 4px;border-bottom:1px solid var(--line);font-size:14.5px;
