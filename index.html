@@ -148,3 +148,803 @@
   .toggle-row{
     display:flex;align-items:center;justify-content:space-between;
     padding:10px 4px;border-bottom:1px solid var(--line);font-size:14.5px;
+  }
+  .toggle-row .name{flex:1;}
+  .toggle-row .day-tag{font-size:11px;color:var(--accent);font-weight:600;margin-right:8px;}
+  .switch{
+    width:42px;height:24px;border-radius:20px;background:var(--muted);
+    position:relative;cursor:pointer;flex:0 0 42px;
+  }
+  .switch.on{background:var(--olive);}
+  .switch .knob{
+    position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;
+    background:white;transition:left .15s;
+  }
+  .switch.on .knob{left:20px;}
+  .panel-actions{display:flex;gap:10px;margin-top:22px;}
+  .panel-btn{
+    flex:1;padding:13px;border-radius:10px;border:none;font-family:inherit;
+    font-size:14px;font-weight:600;cursor:pointer;
+  }
+  .panel-btn.close{background:var(--surface);border:1.5px solid var(--line);color:var(--ink);}
+  .panel-btn.mark-all{background:var(--primary);color:white;}
+  .save-toast{
+    position:fixed;bottom:100px;left:50%;transform:translateX(-50%);
+    background:var(--ink);color:white;padding:9px 16px;border-radius:8px;font-size:13px;
+    opacity:0;transition:opacity .2s;pointer-events:none;z-index:60;
+  }
+  .save-toast.show{opacity:1;}
+
+  .order-card{
+    background:var(--surface);border:1.5px solid var(--line);border-radius:12px;
+    padding:14px 16px;margin-bottom:12px;
+  }
+  .order-card .order-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;}
+  .order-card .order-name{font-weight:700;font-size:15px;}
+  .order-card .order-time{font-size:12px;color:var(--ink-soft);}
+  .order-card .order-line{font-size:13.5px;color:var(--ink-soft);margin:2px 0;}
+  .order-card .order-total{font-weight:700;color:var(--primary-dark);margin-top:6px;font-size:14.5px;}
+  .order-actions{display:flex;gap:8px;margin-top:10px;}
+  .order-btn{
+    flex:1;padding:11px;border-radius:8px;border:none;font-family:inherit;
+    font-size:13.5px;font-weight:600;cursor:pointer;background:var(--primary);color:white;
+  }
+  .order-btn.ghost{background:none;color:var(--ink-soft);text-decoration:underline;flex:0 0 auto;font-weight:500;}
+
+  .confirm-box{
+    text-align:center;padding:40px 20px;
+  }
+  .confirm-box .icon{font-size:44px;margin-bottom:10px;}
+  .confirm-box h2{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;font-size:26px;color:var(--primary-dark);margin:0 0 8px;}
+  .confirm-box p{color:var(--ink-soft);font-size:14.5px;margin:0 0 20px;}
+
+  .conn-dot{
+    position:fixed;top:10px;right:10px;width:9px;height:9px;border-radius:50%;
+    background:var(--muted);z-index:70;transition:background .2s;
+  }
+  .conn-dot.ok{background:var(--olive);}
+  .conn-dot.err{background:var(--primary);}
+</style></head>
+<body>
+
+<div class="conn-dot" id="connDot" title="Status da conexão"></div>
+
+<div class="wrap" id="orderView">
+  <header>
+    <div class="brand-row">
+      <div>
+        <h1>Kero Pratinho</h1>
+        <p class="tagline">Pratinho do dia · Retirada no local</p>
+      </div>
+      <span id="statusBadge" class="status open"><span class="dot"></span>Aberto</span>
+    </div>
+    <p class="hours">Todos os dias, das 7h às 22h — pedido é só para retirada</p>
+    <p class="hours">Dúvidas? <a href="https://wa.me/5585996780541" target="_blank" style="color:var(--primary-dark);font-weight:600;">Fale no WhatsApp</a></p>
+  </header>
+
+  <section>
+    <div class="step-label">
+      <span class="step-num">1</span>
+      <div><p class="step-title">Escolha o tamanho</p><p class="step-hint">Pratinho</p></div>
+    </div>
+    <div class="size-grid">
+      <div class="size-card" data-size="P" onclick="selectSize('P')">
+        <span class="letter">P</span><span class="price">R$ 16</span>
+      </div>
+      <div class="size-card" data-size="M" onclick="selectSize('M')">
+        <span class="letter">M</span><span class="price">R$ 20</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="step-label">
+      <span class="step-num">2</span>
+      <div><p class="step-title">Tipo de arroz</p><p class="step-hint">Escolha 1</p></div>
+    </div>
+    <div id="riceList" class="option-list"></div>
+  </section>
+
+  <section>
+    <div class="step-label">
+      <span class="step-num">3</span>
+      <div><p class="step-title">Proteínas</p><p class="step-hint">Escolha 2</p></div>
+    </div>
+    <div id="proteinList" class="option-list"></div>
+  </section>
+
+  <section>
+    <div class="step-label">
+      <span class="step-num">4</span>
+      <div><p class="step-title">Salada / acompanhamento</p><p class="step-hint">Marque as que quiser</p></div>
+    </div>
+    <div id="saladList" class="option-list"></div>
+  </section>
+
+  <section>
+    <div class="step-label">
+      <span class="step-num">+</span>
+      <div><p class="step-title">Sopa (opcional)</p><p class="step-hint">Item separado, disponível todo dia</p></div>
+    </div>
+    <div class="size-grid">
+      <div class="size-card" data-soup="P" onclick="selectSoup('P')">
+        <span class="letter">P</span><span class="price">R$ 13</span>
+      </div>
+      <div class="size-card" data-soup="M" onclick="selectSoup('M')">
+        <span class="letter">M</span><span class="price">R$ 15</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="step-label">
+      <span class="step-num">✎</span>
+      <div><p class="step-title">Nome e observação</p><p class="step-hint">Opcional</p></div>
+    </div>
+    <input type="text" id="custName" placeholder="Seu nome" style="margin-bottom:10px;">
+    <input type="text" id="custPhone" inputmode="tel" placeholder="Seu telefone (com DDD)" style="margin-bottom:10px;">
+    <textarea id="custNote" placeholder="Alguma observação? (ex: sem cebola)"></textarea>
+  </section>
+
+  <footer>
+    <button class="admin-link" onclick="openLocked('orders')">Ver pedidos <span class="badge" id="ordersBadge" style="display:none;">0</span></button>
+    <button class="admin-link" onclick="openLocked('menu')">Atualizar cardápio do dia (equipe)</button>
+  </footer>
+</div>
+
+<div class="wrap" id="confirmView" style="display:none;">
+  <div class="confirm-box">
+    <div class="icon">✅</div>
+    <h2>Pedido enviado!</h2>
+    <p>Seu pratinho já entrou na fila. Aguarde a confirmação — a retirada é no balcão.</p>
+    <button class="panel-btn mark-all" style="max-width:220px;" onclick="resetOrder()">Fazer novo pedido</button>
+  </div>
+</div>
+
+<p id="sendError" style="display:none;position:fixed;bottom:80px;left:20px;right:20px;max-width:520px;margin:0 auto;background:#F3E3DC;color:var(--primary-dark);border:1px solid var(--primary);border-radius:10px;padding:10px 14px;font-size:13px;z-index:40;"></p>
+
+<div class="summary-bar" id="summaryBar">
+  <div class="summary-inner">
+    <div class="summary-total">
+      <div class="label">Total</div>
+      <div class="amount" id="totalAmount">R$ 0</div>
+    </div>
+    <button class="send-btn" id="sendBtn" onclick="sendOrder()" disabled>Enviar pedido</button>
+  </div>
+</div>
+
+<div class="overlay" id="pinOverlay">
+  <div class="panel" style="max-width:340px;border-radius:18px;">
+    <h2>Senha da equipe</h2>
+    <p class="sub">Digite a senha para continuar.</p>
+    <input type="password" id="pinInput" inputmode="numeric" maxlength="6" placeholder="••••••"
+      style="text-align:center;letter-spacing:6px;font-size:20px;margin-bottom:10px;">
+    <p id="pinError" style="color:var(--primary);font-size:13px;display:none;margin:0 0 10px;">Senha incorreta</p>
+    <div class="panel-actions">
+      <button class="panel-btn close" onclick="closePin()">Cancelar</button>
+      <button class="panel-btn mark-all" onclick="checkPin()">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="adminOverlay">
+  <div class="panel">
+    <h2>Cardápio de hoje</h2>
+    <p class="sub">Desmarque o que acabou. Fica salvo pra todo mundo que abrir o link, na hora.</p>
+    <div class="panel-group">
+      <h3>Arroz</h3>
+      <div id="adminRice"></div>
+    </div>
+    <div class="panel-group">
+      <h3>Proteínas</h3>
+      <div id="adminProtein"></div>
+    </div>
+    <div class="panel-group">
+      <h3>Salada / acompanhamento</h3>
+      <div id="adminSalad"></div>
+    </div>
+    <div class="panel-actions">
+      <button class="panel-btn mark-all" onclick="markAllAvailable()">Marcar tudo disponível</button>
+      <button class="panel-btn close" onclick="closeOverlay('adminOverlay')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="ordersOverlay">
+  <div class="panel">
+    <h2>Pedidos</h2>
+    <p class="sub">Confirme para imprimir na impressora térmica.</p>
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <button class="panel-btn" id="tabPending" onclick="switchOrdersTab('pending')" style="background:var(--primary);color:white;">Pendentes</button>
+      <button class="panel-btn" id="tabDone" onclick="switchOrdersTab('done')" style="background:var(--surface);border:1.5px solid var(--line);color:var(--ink);">Concluídos</button>
+      <button class="panel-btn" onclick="testBeep()" style="flex:0 0 auto;background:var(--accent);color:white;padding:13px 14px;">🔔 Testar som</button>
+    </div>
+    <div id="ordersList"></div>
+    <div class="panel-actions">
+      <button class="panel-btn close" onclick="closeOverlay('ordersOverlay')" style="flex:1;">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="previewOverlay">
+  <div class="panel" style="max-width:400px;">
+    <h2>Prévia do recibo</h2>
+    <p class="sub">Aproximação de como sai na impressora (letra um pouco maior que o normal).</p>
+    <div style="background:white;border:1px solid var(--line);border-radius:8px;padding:16px;">
+      <pre id="previewText" style="font-family:'Courier New',monospace;font-size:15px;line-height:1.6;font-weight:600;white-space:pre-wrap;margin:0;color:#111;"></pre>
+    </div>
+    <div class="panel-actions">
+      <button class="panel-btn close" onclick="closeOverlay('previewOverlay')" style="flex:1;">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div class="save-toast" id="saveToast">Cardápio atualizado ✓</div>
+
+<!-- Firebase: inicializa em módulo separado e expõe funções em window.fb --><script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import { getDatabase, ref, set, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCpXdACJ3G24NGJICV30bexIYvNYkkvwoY",
+    authDomain: "kero-pratinho-f443e.firebaseapp.com",
+    projectId: "kero-pratinho-f443e",
+    storageBucket: "kero-pratinho-f443e.firebasestorage.app",
+    messagingSenderId: "287303195197",
+    appId: "1:287303195197:web:05e669908d86aa4ec22854",
+    databaseURL: "https://kero-pratinho-f443e-default-rtdb.firebaseio.com/"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  window.fb = { db, ref, set, update, remove, onValue };
+  window.fbReady = true;
+  window.dispatchEvent(new Event('fb-ready'));
+</script>
+
+<script>
+const ADMIN_PIN = "919473";
+
+const RICE = [
+  {id:'branco', label:'Arroz branco'},
+  {id:'grega', label:'Arroz à grega'},
+  {id:'baiao', label:'Baião de dois', days:[5,6]}
+];
+const PROTEIN = [
+  {id:'lasanha', label:'Lasanha à bolonhesa (sem presunto)'},
+  {id:'escond_frango', label:'Escondidinho de frango'},
+  {id:'escond_linguica', label:'Escondidinho de linguiça'},
+  {id:'escond_pernil', label:'Escondidinho de pernil'},
+  {id:'creme_galinha', label:'Creme de galinha'},
+  {id:'fricasse', label:'Fricassé de frango'},
+  {id:'file_bovino_madeira', label:'Filé bovino ao molho madeira'},
+  {id:'file_suino_madeira', label:'Filé suíno ao molho madeira'},
+  {id:'bovino_chapa', label:'Bovino trinchado na chapa'},
+  {id:'suino_chapa', label:'Filezinho suíno trinchado na chapa'},
+  {id:'suino_barbecue', label:'Filezinho suíno barbecue'},
+  {id:'macarronada', label:'Macarronada'},
+  {id:'frango_assado', label:'Frango assado / refogado no azeite'},
+  {id:'yakisoba', label:'Yakisoba', days:[5,6,0]},
+  {id:'file_frango_chapa', label:'Filé de frango assado na chapinha'},
+  {id:'vatapa_frango', label:'Vatapá de frango (sem pimenta, sem leite)'},
+  {id:'vatapa_camarao', label:'Vatapá de camarão (sem pimenta, sem leite)'}
+];
+const SALAD = [
+  {id:'folhas', label:'Folhas temperadas com azeite'},
+  {id:'batata_palha', label:'Batata palha'},
+  {id:'farofa', label:'Farofa temperada'},
+  {id:'repolho', label:'Repolho refogado'},
+  {id:'legumes', label:'Legumes cozidos'}
+];
+const DAY_TAG = {5:'sex', 6:'sáb', 0:'dom'};
+
+let availability = {};
+let orders = [];
+let seenOrderIds = new Set();
+let pinTarget = null;
+let audioCtx = null;
+
+let state = { size:null, rice:null, proteins:[], salads:[], soup:null };
+
+function dayAllowed(item){
+  if(!item.days) return true;
+  return item.days.includes(new Date().getDay());
+}
+function dayNote(item){
+  if(!item.days) return '';
+  const names = item.days.map(d=>DAY_TAG[d]);
+  return `só ${names.join('/')}`;
+}
+function isAvailable(id){
+  return availability[id] !== false;
+}
+
+async function saveAvailability(){
+  try{
+    await window.fb.set(window.fb.ref(window.fb.db, 'availability'), availability);
+    showToast('Cardápio atualizado ✓');
+    setConnStatus('ok');
+  }catch(e){
+    console.error('Erro ao salvar cardápio', e);
+    setConnStatus('err');
+  }
+}
+function showToast(msg){
+  const t = document.getElementById('saveToast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1800);
+}
+function setConnStatus(status){
+  const dot = document.getElementById('connDot');
+  dot.classList.remove('ok','err');
+  if(status) dot.classList.add(status);
+}
+
+function renderList(container, items, selected, onClick, multi){
+  container.innerHTML = '';
+  const visible = items.filter(dayAllowed);
+  if(visible.length === 0){
+    container.innerHTML = '<p class="empty-note">Nada disponível nessa categoria hoje.</p>';
+    return;
+  }
+  visible.forEach(item=>{
+    const available = isAvailable(item.id);
+    const isSel = multi ? selected.includes(item.id) : selected === item.id;
+    const div = document.createElement('div');
+    div.className = 'option' + (isSel?' selected':'') + (!available?' disabled':'');
+    div.innerHTML = `<div class="check"></div><span>${item.label}</span>` +
+      (item.days ? `<span class="day-note">${dayNote(item)}</span>` : '');
+    if(available){
+      div.onclick = ()=>onClick(item.id);
+    }
+    container.appendChild(div);
+  });
+}
+
+function render(){
+  renderList(document.getElementById('riceList'), RICE, state.rice, (id)=>{
+    state.rice = state.rice === id ? null : id;
+    render();
+  }, false);
+
+  renderList(document.getElementById('proteinList'), PROTEIN, state.proteins, (id)=>{
+    const idx = state.proteins.indexOf(id);
+    if(idx >= 0){ state.proteins.splice(idx,1); }
+    else if(state.proteins.length < 2){ state.proteins.push(id); }
+    render();
+  }, true);
+
+  renderList(document.getElementById('saladList'), SALAD, state.salads, (id)=>{
+    const idx = state.salads.indexOf(id);
+    if(idx >= 0){ state.salads.splice(idx,1); }
+    else { state.salads.push(id); }
+    render();
+  }, true);
+
+  document.querySelectorAll('[data-size]').forEach(el=>{
+    el.classList.toggle('selected', el.dataset.size === state.size);
+  });
+  document.querySelectorAll('[data-soup]').forEach(el=>{
+    el.classList.toggle('selected', el.dataset.soup === state.soup);
+  });
+
+  updateSummary();
+}
+
+function selectSize(size){
+  state.size = state.size === size ? null : size;
+  render();
+}
+function selectSoup(size){
+  state.soup = state.soup === size ? null : size;
+  render();
+}
+
+function total(){
+  let t = 0;
+  if(state.size === 'P') t += 16;
+  if(state.size === 'M') t += 20;
+  if(state.soup === 'P') t += 13;
+  if(state.soup === 'M') t += 15;
+  return t;
+}
+
+function updateSummary(){
+  document.getElementById('totalAmount').textContent = 'R$ ' + total();
+  const platoOk = !state.size || (state.rice && state.proteins.length === 2);
+  const hasSomething = state.size || state.soup;
+  const phoneOk = document.getElementById('custPhone').value.trim().length >= 8;
+  document.getElementById('sendBtn').disabled = !(hasSomething && platoOk && phoneOk);
+}
+
+function labelOf(list, id){
+  const f = list.find(i=>i.id===id);
+  return f ? f.label : id;
+}
+
+function buildOrderObject(){
+  const name = document.getElementById('custName').value.trim();
+  const phone = document.getElementById('custPhone').value.trim();
+  const note = document.getElementById('custNote').value.trim();
+  return {
+    id: Date.now() + '-' + Math.random().toString(36).slice(2,7),
+    time: new Date().toISOString(),
+    name: name || 'Sem nome',
+    phone: phone,
+    note: note,
+    size: state.size,
+    rice: state.rice,
+    proteins: [...state.proteins],
+    salads: [...state.salads],
+    soup: state.soup,
+    total: total(),
+    status: 'pending'
+  };
+}
+
+async function sendOrder(){
+  const errBox = document.getElementById('sendError');
+  errBox.style.display = 'none';
+  const order = buildOrderObject();
+  try{
+    await window.fb.set(window.fb.ref(window.fb.db, 'orders/' + order.id), order);
+    setConnStatus('ok');
+  }catch(e){
+    console.error('Erro ao enviar pedido', e);
+    setConnStatus('err');
+    errBox.textContent = 'Não consegui enviar o pedido (erro: ' + ((e && e.message) ? e.message : String(e)) + '). Tente novamente ou recarregue a página.';
+    errBox.style.display = 'block';
+    return;
+  }
+  document.getElementById('orderView').style.display = 'none';
+  document.getElementById('confirmView').style.display = 'block';
+  document.getElementById('summaryBar').style.display = 'none';
+}
+
+function resetOrder(){
+  state = { size:null, rice:null, proteins:[], salads:[], soup:null };
+  document.getElementById('custName').value = '';
+  document.getElementById('custPhone').value = '';
+  document.getElementById('custNote').value = '';
+  document.getElementById('orderView').style.display = 'block';
+  document.getElementById('confirmView').style.display = 'none';
+  document.getElementById('summaryBar').style.display = 'block';
+  render();
+}
+
+function updateStatusBadge(){
+  const hour = new Date().getHours();
+  const badge = document.getElementById('statusBadge');
+  const open = hour >= 7 && hour < 22;
+  badge.className = 'status ' + (open ? 'open' : 'closed');
+  badge.innerHTML = `<span class="dot"></span>${open ? 'Aberto' : 'Fechado'}`;
+}
+
+// ---- PIN / locked areas ----
+function openLocked(target){
+  pinTarget = target;
+  if(sessionStorage.getItem('pratinho-admin-ok') === '1'){
+    initAudio();
+    attachOrdersListener();
+    unlockAndOpen();
+  } else {
+    document.getElementById('pinInput').value = '';
+    document.getElementById('pinError').style.display = 'none';
+    document.getElementById('pinOverlay').classList.add('show');
+    setTimeout(()=>document.getElementById('pinInput').focus(), 50);
+  }
+}
+function closePin(){
+  document.getElementById('pinOverlay').classList.remove('show');
+}
+function checkPin(){
+  const val = document.getElementById('pinInput').value.trim();
+  if(val === ADMIN_PIN){
+    sessionStorage.setItem('pratinho-admin-ok', '1');
+    closePin();
+    initAudio();
+    attachOrdersListener();unlockAndOpen();
+  } else {
+    document.getElementById('pinError').style.display = 'block';
+  }
+}
+function unlockAndOpen(){
+  if(pinTarget === 'menu') openMenuPanel();
+  if(pinTarget === 'orders') openOrdersPanel();
+}
+function closeOverlay(id){
+  document.getElementById(id).classList.remove('show');
+  render();
+}
+
+// ---- Cardápio (disponibilidade) — sincroniza em tempo real ----
+let availabilityListenerAttached = false;
+function attachAvailabilityListener(){
+  if(availabilityListenerAttached) return;
+  availabilityListenerAttached = true;
+  window.fb.onValue(window.fb.ref(window.fb.db, 'availability'), function(snapshot){
+    availability = snapshot.val() || {};
+    setConnStatus('ok');
+    render();
+  }, function(err){
+    console.error('Erro ao ler cardápio', err);
+    setConnStatus('err');
+  });
+}
+
+function openMenuPanel(){
+  renderAdminList(document.getElementById('adminRice'), RICE);
+  renderAdminList(document.getElementById('adminProtein'), PROTEIN);
+  renderAdminList(document.getElementById('adminSalad'), SALAD);
+  document.getElementById('adminOverlay').classList.add('show');
+}
+function renderAdminList(container, items){
+  container.innerHTML = '';
+  items.forEach(item=>{
+    const on = isAvailable(item.id);
+    const row = document.createElement('div');
+    row.className = 'toggle-row';
+    row.innerHTML = `<span class="name">${item.label}</span>` +
+      (item.days ? `<span class="day-tag">${dayNote(item)}</span>` : '') +
+      `<div class="switch ${on?'on':''}"><div class="knob"></div></div>`;
+    row.querySelector('.switch').onclick = ()=>{
+      availability[item.id] = !on;
+      saveAvailability();
+      renderAdminList(container, items);
+    };
+    container.appendChild(row);
+  });
+}
+function markAllAvailable(){
+  [...RICE, ...PROTEIN, ...SALAD].forEach(item=>{ availability[item.id] = true; });
+  saveAvailability();
+  openMenuPanel();
+}
+
+// ---- Pedidos — fila em tempo real via Firebase ----
+function formatTime(iso){
+  const d = new Date(iso);
+  return d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+}
+function orderReceiptText(o){
+  let lines = [];
+  lines.push('=== KERO PRATINHO ===');
+  lines.push('RETIRADA NO BALCAO');
+  lines.push('Hora: ' + formatTime(o.time));
+  lines.push('Cliente: ' + o.name);
+  if(o.phone){ lines.push('Telefone: ' + o.phone); }
+  lines.push('------------------------');
+  if(o.size){
+    lines.push('PRATINHO ' + o.size + ' - R$ ' + (o.size==='P'?16:20));
+    lines.push('Proteinas: ' + o.proteins.map(id=>labelOf(PROTEIN,id)).join(', '));
+    lines.push('Arroz: ' + labelOf(RICE, o.rice));
+    if(o.salads.length){
+      lines.push('Salada: ' + o.salads.map(id=>labelOf(SALAD,id)).join(', '));
+    }
+  }
+  if(o.soup){
+    lines.push('SOPA ' + o.soup + ' - R$ ' + (o.soup==='P'?13:15));
+  }
+  if(o.note){
+    lines.push('------------------------');
+    lines.push('Obs: ' + o.note);
+  }
+  lines.push('------------------------');
+  lines.push('TOTAL: R$ ' + o.total);
+  lines.push('');
+  lines.push('');
+  return lines.join('\n');
+}
+let ordersTab = 'pending';
+let ordersListenerAttached = false;
+
+function attachOrdersListener(){
+  if(ordersListenerAttached) return;
+  ordersListenerAttached = true;
+  let firstSnapshot = true;
+  window.fb.onValue(window.fb.ref(window.fb.db, 'orders'), function(snapshot){
+    const val = snapshot.val() || {};
+    orders = Object.keys(val).map(k=>val[k]).sort((a,b)=> (a.time||'').localeCompare(b.time||''));
+    setConnStatus('ok');
+
+    if(firstSnapshot){
+      orders.filter(o=>o.status==='pending').forEach(o=>seenOrderIds.add(o.id));
+      firstSnapshot = false;
+    } else {
+      let hasNew = false;
+      orders.filter(o=>o.status==='pending').forEach(o=>{
+        if(!seenOrderIds.has(o.id)){
+          seenOrderIds.add(o.id);
+          hasNew = true;
+        }
+      });
+      if(hasNew) playBeep();
+    }
+    updateOrdersBadge();
+    if(document.getElementById('ordersOverlay').classList.contains('show')){
+      renderOrdersList();
+    }
+  }, function(err){
+    console.error('Erro ao ler pedidos', err);
+    setConnStatus('err');
+  });
+}
+
+function openOrdersPanel(){
+  ordersTab = 'pending';
+  renderOrdersList();
+  document.getElementById('ordersOverlay').classList.add('show');
+  updateOrdersBadge();
+}
+function switchOrdersTab(tab){
+  ordersTab = tab;
+  document.getElementById('tabPending').style.background = tab==='pending' ? 'var(--primary)' : 'var(--surface)';
+  document.getElementById('tabPending').style.color = tab==='pending' ? 'white' : 'var(--ink)';
+  document.getElementById('tabPending').style.border = tab==='pending' ? 'none' : '1.5px solid var(--line)';
+  document.getElementById('tabDone').style.background = tab==='done' ? 'var(--primary)' : 'var(--surface)';
+  document.getElementById('tabDone').style.color = tab==='done' ? 'white' : 'var(--ink)';
+  document.getElementById('tabDone').style.border = tab==='done' ? 'none' : '1.5px solid var(--line)';
+  renderOrdersList();
+}
+function renderOrdersList(){
+  const container = document.getElementById('ordersList');
+  const list = orders.filter(o=>o.status===ordersTab);
+  if(list.length === 0){
+    container.innerHTML = `<p class="empty-note">${ordersTab==='pending' ? 'Nenhum pedido pendente.' : 'Nenhum pedido concluído ainda.'}</p>`;
+    return;
+  }
+  container.innerHTML = '';
+  list.slice().reverse().forEach(o=>{
+    const card = document.createElement('div');
+    card.className = 'order-card';
+    let itemsHtml = '';
+    if(o.size){
+      itemsHtml += `<div class="order-line">Pratinho ${o.size} — ${o.proteins.map(id=>labelOf(PROTEIN,id)).join(', ')}</div>`;
+      itemsHtml += `<div class="order-line">${labelOf(RICE,o.rice)}${o.salads.length ? ' · ' + o.salads.map(id=>labelOf(SALAD,id)).join(', ') : ''}</div>`;
+    }
+    if(o.soup){
+      itemsHtml += `<div class="order-line">Sopa ${o.soup}</div>`;
+    }
+    if(o.note){
+      itemsHtml += `<div class="order-line">Obs: ${o.note}</div>`;
+    }
+    const actionsHtml = ordersTab === 'pending'
+      ? `<button class="order-btn">Confirmar e imprimir</button>
+         <button class="order-btn ghost" style="text-decoration:underline;">visualizar</button>
+         <button class="order-btn ghost">excluir</button>`
+      : `<button class="order-btn">Reimprimir</button>
+         <button class="order-btn ghost" style="text-decoration:underline;">visualizar</button>`;
+    card.innerHTML = `
+      <div class="order-top">
+        <span class="order-name">${o.name}${o.phone ? ' · ' + o.phone : ''}</span>
+        <span class="order-time">${formatTime(o.time)}</span>
+      </div>
+      ${itemsHtml}
+      <div class="order-total">Total: R$ ${o.total}</div>
+      <div class="order-actions">
+        ${actionsHtml}
+      </div>
+    `;
+    if(ordersTab === 'pending'){
+      card.querySelector('.order-btn:not(.ghost)').onclick = ()=>confirmOrder(o.id);
+      card.querySelectorAll('.order-btn.ghost')[0].onclick = ()=>previewReceipt(o);
+      card.querySelectorAll('.order-btn.ghost')[1].onclick = ()=>removeOrder(o.id);
+    } else {
+      card.querySelector('.order-btn:not(.ghost)').onclick = ()=>printReceipt(o);
+      card.querySelectorAll('.order-btn.ghost')[0].onclick = ()=>previewReceipt(o);
+    }
+    container.appendChild(card);
+  });
+}
+async function confirmOrder(id){
+  const o = orders.find(x=>x.id===id);
+  if(!o) return;
+  seenOrderIds.add(id);
+  try{
+    await window.fb.update(window.fb.ref(window.fb.db, 'orders/'+id), {status:'done'});
+    setConnStatus('ok');
+  }catch(e){
+    console.error('Erro ao confirmar pedido', e);
+    setConnStatus('err');
+  }
+  try{
+    printReceipt(o);
+  }catch(e){
+    console.error('Erro ao abrir a impressora', e);
+  }
+}
+async function removeOrder(id){
+  seenOrderIds.add(id);
+  try{
+    await window.fb.remove(window.fb.ref(window.fb.db, 'orders/'+id));
+    setConnStatus('ok');
+  }catch(e){
+    console.error('Erro ao excluir pedido', e);
+    setConnStatus('err');
+  }
+}
+function previewReceipt(o){
+  document.getElementById('previewText').textContent = orderReceiptText(o);
+  document.getElementById('previewOverlay').classList.add('show');
+}
+function printReceipt(o){
+  const text = orderReceiptText(o);
+  const ESC_BIG = '\x1D\x21\x01';
+  const ESC_NORMAL = '\x1D\x21\x00';
+  const fullText = ESC_BIG + text + ESC_NORMAL;
+  const b64 = btoa(unescape(encodeURIComponent(fullText)));
+  const url = 'intent:base64,' + b64 + '#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;';
+  window.location.href = url;
+}
+function updateOrdersBadge(){
+  const pendingCount = orders.filter(o=>o.status==='pending').length;
+  const badge = document.getElementById('ordersBadge');
+  if(pendingCount > 0){
+    badge.style.display = 'inline-block';
+    badge.textContent = pendingCount;
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// ---- Som de novo pedido ----
+function initAudio(){
+  if(!audioCtx){
+    try{
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }catch(e){ audioCtx = null; }
+  }
+  if(audioCtx && audioCtx.state === 'suspended'){
+    audioCtx.resume();
+  }
+}
+function playBeep(){
+  if(!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const melody = [880, 1046, 1318, 1046, 880, 1046, 1318, 1568];
+  let t = now;
+  melody.forEach((freq)=>{
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.25, t + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(t);
+    osc.stop(t + 0.18);
+    t += 0.19;
+  });
+}
+function testBeep(){
+  initAudio();
+  playBeep();
+}
+
+updateStatusBadge();
+setInterval(updateStatusBadge, 60000);
+
+function initFirebaseDependent(){
+  attachAvailabilityListener();
+  if(sessionStorage.getItem('pratinho-admin-ok') === '1'){
+    initAudio();
+    attachOrdersListener();
+  }
+}
+if(window.fbReady){
+  initFirebaseDependent();
+} else {
+  window.addEventListener('fb-ready', initFirebaseDependent);
+}
+
+document.getElementById('pinInput').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter') checkPin();
+});
+document.getElementById('custPhone').addEventListener('input', updateSummary);
+window.testBeep = testBeep;
+</script>
+</body>
+</html>
